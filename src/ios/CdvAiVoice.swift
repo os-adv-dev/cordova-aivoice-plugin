@@ -177,6 +177,13 @@ class CdvAiVoice: CDVPlugin, SFSpeechRecognizerDelegate, AVSpeechSynthesizerDele
             return
         }
 
+        // Check if device is in silent mode
+        if isDeviceInSilentMode() {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Device is in silent mode. Please disable silent mode to use text-to-speech.")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            return
+        }
+
         // Reset and configure audio session for playback
         resetAndConfigureAudioSessionForPlayback()
 
@@ -196,6 +203,14 @@ class CdvAiVoice: CDVPlugin, SFSpeechRecognizerDelegate, AVSpeechSynthesizerDele
         } catch {
             print("Error setting audio session category for playback: \(error.localizedDescription)")
         }
+    }
+
+    private func isDeviceInSilentMode() -> Bool {
+        // Check if the output volume is zero (muted)
+        let audioSession = AVAudioSession.sharedInstance()
+        let outputVolume = audioSession.outputVolume
+        print("Current output volume: \(outputVolume)")
+        return outputVolume == 0
     }
 
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

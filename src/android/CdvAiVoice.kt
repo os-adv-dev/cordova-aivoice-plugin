@@ -1,8 +1,10 @@
 package com.outsystems.experts.cdvaivoice
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -56,6 +58,12 @@ class CdvAiVoice : CordovaPlugin() {
             }
             SPEAK -> {
                 currentAction = SPEAK
+
+                if (isDeviceInSilentMode()) {
+                    callbackContext.error("Device is in silent mode. Please disable silent mode to use text-to-speech.")
+                    return true
+                }
+
                 if (hasAudioPermission()) {
                     val text = args.getString(0)
                     speakText = text
@@ -77,6 +85,15 @@ class CdvAiVoice : CordovaPlugin() {
             else -> {
                 false
             }
+        }
+    }
+
+    private fun isDeviceInSilentMode(): Boolean {
+        val audioManager = cordova.activity.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        return when (audioManager.ringerMode) {
+            AudioManager.RINGER_MODE_SILENT -> true
+            AudioManager.RINGER_MODE_VIBRATE -> true
+            else -> false
         }
     }
 
